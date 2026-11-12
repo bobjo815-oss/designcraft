@@ -413,6 +413,10 @@ fn mcp_automation_roots_take_several_folders() {
     }
     // Resolved, as the server shows the roots (`/var` is `/private/var` on macOS).
     let base = std::fs::canonicalize(base).unwrap();
+    // Verbatim Windows paths do not resolve `..`. Use ordinary absolute paths
+    // for the traversal cases below, as users and the CLI's root display do.
+    #[cfg(windows)]
+    let base = std::path::PathBuf::from(base.to_str().unwrap().replace(r"\\?\UNC\", r"\\").replace(r"\\?\", ""));
     for f in ["in/a.designcraft", "shared/b.designcraft", "outside/secret.designcraft", "parent.designcraft", "in2/c.designcraft"] {
         make_document(&base.join(f));
     }

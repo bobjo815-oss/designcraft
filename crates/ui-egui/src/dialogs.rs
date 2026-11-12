@@ -1117,7 +1117,7 @@ fn create_guides_dialog(app: &mut DesignApp, ui: &mut egui::Ui, d: &mut Dialog) 
         ui.vertical(|ui| {
             ui.horizontal_top(|ui| {
                 for (title, n, g, id) in [("Rows", "rows", "rowGutter", "cg_rows"), ("Columns", "columns", "columnGutter", "cg_cols")] {
-                    group_box(ui, &tr(title), |ui| {
+                    group_box(ui, crate::i18n::tr_context(&lang, title, "table"), |ui| {
                         egui::Grid::new(id).num_columns(2).spacing([6.0, 6.0]).show(ui, |ui| {
                             caption_right(ui, crate::i18n::tr_context(&lang, "Number:", "count"), 72.0);
                             text_field(ui, d, n, 70.0);

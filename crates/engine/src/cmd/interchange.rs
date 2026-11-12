@@ -504,6 +504,7 @@ mod tests {
             "file://192.0.2.1/s/x.png",
             text.to_str().unwrap(),
             zero.to_str().unwrap(),
+            #[cfg(unix)] // A Unix device, not an absolute device path on Windows.
             "/dev/zero",
             "Links/zero.png",
             "Links/notes.png",

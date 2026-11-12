@@ -1103,7 +1103,7 @@ fn quick_actions_object(app: &mut DesignApp, ui: &mut Ui, i: &SelInfo) {
             ui.spacing_mut().item_spacing.x = 10.0;
             let r = outline_button(ui, crate::i18n::tr(&app.ui.language, "Convert Shape"), hw);
             convert_shape_menu(app, &r);
-            let r = outline_button(ui, crate::i18n::tr(&app.ui.language, "Arrange"), hw);
+            let r = outline_button(ui, crate::i18n::tr_context(&app.ui.language, "Arrange", "Object"), hw);
             arrange_menu(app, &r);
         });
         ui.add_space(4.0);
@@ -1118,7 +1118,7 @@ fn quick_actions_object(app: &mut DesignApp, ui: &mut Ui, i: &SelInfo) {
     }
     ui.horizontal(|ui| {
         ui.spacing_mut().item_spacing.x = 10.0;
-        let r = outline_button(ui, crate::i18n::tr(&app.ui.language, "Arrange"), hw);
+        let r = outline_button(ui, crate::i18n::tr_context(&app.ui.language, "Arrange", "Object"), hw);
         arrange_menu(app, &r);
         if outline_button(ui, crate::i18n::tr(&app.ui.language, if i.count > 1 { "Group" } else { "Lock" }), hw).clicked() {
             let _ = app.run(if i.count > 1 { "object.group" } else { "object.lock" }, json!({}));

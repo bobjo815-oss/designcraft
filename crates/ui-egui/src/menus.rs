@@ -302,6 +302,7 @@ pub const UI_COMMANDS: &[(&str, &str, Option<&str>, &str)] = &[
     ),
     ("window.taskBarReset", "Reset Bar Position", None, "{} — the Contextual Task Bar follows the selection again, under it"),
     ("help.discord", "Join the ArtCraft Discord…", None, "{} — opens https://discord.gg/artcraft in the browser"),
+    ("help.tools", "Tool help", Some("F1"), "{open?: bool} — show or hide beginner usage help for every tool"),
     ("help.appPage", "DesignCraft Website…", None, "{} — opens https://getartcraft.com/apps/designcraft"),
     ("help.github", "DesignCraft on GitHub…", None, "{} — opens https://github.com/storytold/designcraft"),
     ("help.issues", "Report an Issue…", None, "{} — opens the GitHub issue tracker"),
@@ -945,6 +946,7 @@ pub const MENUS: &[(&str, &[&str])] = &[
     (
         "Help",
         &[
+            "ui:help.tools",
             "ui:help.discord",
             "-",
             "ui:help.appPage",
@@ -1870,6 +1872,10 @@ fn run_ui_inner(app: &mut DesignApp, id: &str, p: &Value) -> Option<Result<Value
         "window.taskBarReset" => {
             app.ui.task_bar_pin = None;
             Ok(Value::Null)
+        }
+        "help.tools" => {
+            app.ui.tool_help = p.get("open").and_then(Value::as_bool).unwrap_or(true);
+            Ok(json!(app.ui.tool_help))
         }
         "help.about" => {
             if let Some(tab) = p.get("tab").and_then(Value::as_str) {
@@ -2998,7 +3004,7 @@ fn menu_items(app: &mut DesignApp, ui: &mut egui::Ui, items: &[Item], path: &str
             }
             Item::Sub(name, children) => {
                 let sub = format!("{path}/{name}");
-                let shown = crate::i18n::tr(&app.ui.language, name).to_owned();
+                let shown = crate::i18n::tr_context(&app.ui.language, name, path).to_owned();
                 menu_button(ui, crate::rtl::widget(ui, shown), |ui| {
                     if sub == OPEN_RECENT {
                         recent_menu_items(app, ui);
@@ -6036,6 +6042,17 @@ mod tests {
             assert!(menu_enabled(&app, id), "{id} must work from the start screen");
         }
         assert!(!menu_enabled(&app, "view.rulers"), "other UI commands still need a document");
+    }
+
+    #[test]
+    fn beginner_tool_help_opens_from_a_command_without_a_document() {
+        let mut app = crate::DesignApp::new(designcraft_engine::Session::new(), crate::Services::default());
+        assert!(!app.ui.tool_help);
+        app.run("help.tools", json!({})).unwrap();
+        assert!(app.ui.tool_help);
+        app.run("help.tools", json!({"open": false})).unwrap();
+        assert!(!app.ui.tool_help);
+        assert!(designcraft_tools::TOOL_GROUPS.iter().flat_map(|group| group.iter()).all(|tool| !tool.description.is_empty()));
     }
 
     // Regression test for #248: the start screen offered no A6 sheet (it listed only the first ten presets).

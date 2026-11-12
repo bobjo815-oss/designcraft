@@ -356,6 +356,9 @@ list) · [roadmap.md](docs/roadmap.md) (milestones, plan) · [parity-checklist.m
 
 ## Progress log
 
+- **2026-10-24 (Korean local fork):** Korean UI labels and original beginner guidance are available in the native Windows build; 37 tool descriptions (four explicitly unavailable tools), keyboard-accessible F1 help, contextual layout terminology and the shared OFL Korean UI font. Native Korean startup, menus and F1 help checked. No global readiness percentage change.
+
+
 Newest first.
 
 - **2026-10-23** · `designcraft-cli mcp` takes `--automation-read-root` and `--automation-write-root` more than once, as the suite's other apps do (#1552): a path inside any root of its kind passes, and the roots' common parent, `..` or a link out of them and the other kind's roots stay refused. No readiness percentage change.

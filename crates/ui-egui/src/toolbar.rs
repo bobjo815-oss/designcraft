@@ -10,6 +10,37 @@ use crate::{DesignApp, icons};
 
 const BTN: f32 = 24.0;
 
+/// The same descriptions as the tooltips, reachable by F1 and the Help menu for keyboard,
+/// touch and screen-reader users. Selecting a tool keeps the matching explanation visible.
+pub fn help_window(app: &mut DesignApp, ctx: &egui::Context) {
+    if !app.ui.tool_help {
+        return;
+    }
+    let mut open = app.ui.tool_help;
+    let lang = app.ui.language.clone();
+    egui::Window::new(crate::i18n::tr(&lang, "Tool help"))
+        .id(egui::Id::new("beginner-tool-help"))
+        .open(&mut open)
+        .default_width(420.0)
+        .default_height(360.0)
+        .show(ctx, |ui| {
+            ui.label(crate::i18n::tr(&lang, "Choose a tool below to read how to use it. F1 opens this help."));
+            egui::ScrollArea::vertical().show(ui, |ui| {
+                for tool in TOOL_GROUPS.iter().flat_map(|group| group.iter()) {
+                    let selected = app.session.tool_id() == tool.id;
+                    if ui.selectable_label(selected, crate::i18n::tr(&lang, tool.label)).clicked() {
+                        app.select_tool(tool.id);
+                    }
+                    if selected {
+                        ui.label(crate::i18n::tr(&lang, tool.description));
+                        ui.separator();
+                    }
+                }
+            });
+        });
+    app.ui.tool_help = open;
+}
+
 pub fn show(app: &mut DesignApp, ui: &mut egui::Ui) {
     let t = Tokens::get(ui.ctx());
     let frame = egui::Frame::NONE.fill(t.panel).stroke(Stroke::new(1.0, t.divider));
@@ -88,7 +119,8 @@ pub fn show(app: &mut DesignApp, ui: &mut egui::Ui) {
                                     Some(s) => format!("{name} ({s})"),
                                     None => name.to_string(),
                                 };
-                                let resp = tool_button(ui, shown.icon, active, &tip);
+                                let help = (!shown.description.is_empty()).then(|| crate::i18n::tr(&app.ui.language, shown.description));
+                                let resp = tool_button(ui, shown.icon, active, &tip, help);
                                 if g.len() > 1 {
                                     // Flyout triangle.
                                     let r = resp.rect;
@@ -166,7 +198,18 @@ pub fn show(app: &mut DesignApp, ui: &mut egui::Ui) {
                                                                 t.text_dim,
                                                             );
                                                         }
-                                                        row.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::Button, true, tl.label));
+                                                        row.widget_info(|| {
+                                                            egui::WidgetInfo::labeled(
+                                                                egui::WidgetType::Button,
+                                                                true,
+                                                                crate::i18n::tr(&app.ui.language, tl.label),
+                                                            )
+                                                        });
+                                                        let row = if tl.description.is_empty() {
+                                                            row
+                                                        } else {
+                                                            row.on_hover_text(crate::i18n::tr(&app.ui.language, tl.description))
+                                                        };
                                                         if row.clicked() {
                                                             chosen = Some(tl.id);
                                                         }
@@ -416,7 +459,7 @@ fn fill_stroke_proxy(app: &mut DesignApp, ui: &mut egui::Ui, width: f32, cols: u
     // View Options (InDesign's: Frame Edges, Rulers, Guides, Smart Guides, Baseline Grid, Hidden
     // Characters, each checked when shown).
     ui.vertical_centered(|ui| {
-        let resp = tool_button(ui, "view-options", false, crate::i18n::tr(&app.ui.language, "View Options"));
+        let resp = tool_button(ui, "view-options", false, crate::i18n::tr(&app.ui.language, "View Options"), None);
         flyout_triangle(ui.painter(), resp.rect.shrink2(vec2(2.0, 2.0)), t.icon);
         let open = resp.clicked();
         let popup = egui::Popup::menu(&resp).open_memory(open.then_some(egui::SetOpenCommand::Toggle));
@@ -539,7 +582,7 @@ fn separator(ui: &mut egui::Ui, t: &Tokens) {
 }
 
 /// A Tools-panel button: 24 pt pitch; the active tool sits in a 28×20 pt `#303030` well with a rim.
-fn tool_button(ui: &mut egui::Ui, icon: &str, active: bool, tip: &str) -> egui::Response {
+fn tool_button(ui: &mut egui::Ui, icon: &str, active: bool, tip: &str, help: Option<&str>) -> egui::Response {
     let t = Tokens::get(ui.ctx());
     let (r, resp) = ui.allocate_exact_size(egui::vec2(BTN, BTN), Sense::click());
     if active {
@@ -552,7 +595,12 @@ fn tool_button(ui: &mut egui::Ui, icon: &str, active: bool, tip: &str) -> egui::
     let enabled = ui.is_enabled();
     resp.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::Button, enabled, tip));
     resp.on_hover_ui(|ui| {
+        ui.set_max_width(320.0);
         crate::rtl::label(ui, tip);
+        if let Some(help) = help {
+            ui.add_space(4.0);
+            crate::rtl::label(ui, help);
+        }
     })
 }
 

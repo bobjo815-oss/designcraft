@@ -343,6 +343,8 @@ pub struct UiState {
     pub task_bar_at: Option<[f32; 2]>,
     /// Help › About DesignCraft is open.
     pub about: bool,
+    #[serde(skip)]
+    pub tool_help: bool,
     /// The About window's tab: 0 About, 1 Contributors, 2 Models (`about::ABOUT_TABS`).
     #[serde(skip)]
     pub about_tab: u8,
@@ -454,6 +456,7 @@ impl Default for UiState {
             task_bar_pin: None,
             task_bar_at: None,
             about: false,
+            tool_help: false,
             about_tab: 0,
             pending_urls: Vec::new(),
             status: String::new(),
@@ -1676,6 +1679,7 @@ impl DesignApp {
         story_editor::show(self, &ctx);
         dialogs::show(self, &ctx);
         about::show(self, &ctx);
+        toolbar::help_window(self, &ctx);
         menus::palette(self, &ctx);
         if self.custom_titlebar {
             chrome::resize_borders(self, ui);

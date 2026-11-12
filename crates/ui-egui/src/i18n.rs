@@ -11,6 +11,7 @@ mod fr;
 mod it;
 mod ja;
 mod ka;
+mod ko;
 mod pl;
 mod pt_br;
 mod ru;
@@ -32,6 +33,7 @@ pub const LANGUAGES: &[(&str, &str)] = &[
     ("cs", "Čeština"),
     ("pl", "Polski"),
     ("ka", "ქართული"),
+    ("ko", "한국어"),
 ];
 
 /// The interface languages in the order the Preferences picker lists them: English first (the
@@ -4688,6 +4690,10 @@ fn lookup<'a>(lang: &str, s: &'a str) -> &'a str {
     if lang == "ka" {
         return GEORGIAN.get_or_init(|| ka::TABLE.iter().copied().collect()).get(s).copied().unwrap_or(s);
     }
+    if lang == "ko" {
+        static KOREAN: OnceLock<HashMap<&str, &str>> = OnceLock::new();
+        return KOREAN.get_or_init(|| ko::TABLE.iter().copied().collect()).get(s).copied().unwrap_or(s);
+    }
     if lang == "uk" {
         return UKRAINIAN.get_or_init(|| uk::TABLE.iter().copied().collect()).get(s).copied().unwrap_or(s);
     }
@@ -4716,6 +4722,7 @@ pub fn tr_context<'a>(lang: &str, s: &'a str, context: &str) -> &'a str {
         "pl" => pl::CONTEXT,
         "ja" => ja::CONTEXT,
         "ar" => ar::CONTEXT,
+        "ko" => ko::CONTEXT,
         _ => &[],
     };
     let written = |text: &&str| !text.trim().is_empty();
@@ -4807,6 +4814,7 @@ mod tests {
         ("it", it::TABLE),
         ("ja", ja::TABLE),
         ("ka", ka::TABLE),
+        ("ko", ko::TABLE),
         ("pl", pl::TABLE),
         ("pt-br", pt_br::TABLE),
         ("ru", ru::TABLE),
@@ -4814,8 +4822,15 @@ mod tests {
     ];
 
     /// Every per-language table `tr_context` looks up.
-    const CONTEXT_TABLES: &[(&str, &[(&str, &str, &str)])] =
-        &[("ar", ar::CONTEXT), ("cs", cs::CONTEXT), ("ja", ja::CONTEXT), ("pl", pl::CONTEXT), ("ru", ru::CONTEXT), ("uk", uk::CONTEXT)];
+    const CONTEXT_TABLES: &[(&str, &[(&str, &str, &str)])] = &[
+        ("ar", ar::CONTEXT),
+        ("cs", cs::CONTEXT),
+        ("ja", ja::CONTEXT),
+        ("ko", ko::CONTEXT),
+        ("pl", pl::CONTEXT),
+        ("ru", ru::CONTEXT),
+        ("uk", uk::CONTEXT),
+    ];
 
     /// The languages of the shared tables' columns, in column order.
     const SHARED_COLUMNS: [&str; 5] = ["de", "fr", "es", "ja", "zh"];
@@ -4939,6 +4954,20 @@ mod tests {
         }
     }
 
+    #[test]
+    fn korean_covers_the_catalogs_commands_and_beginner_help() {
+        let korean: HashSet<&str> = ko::TABLE.iter().filter(|(_, text)| !text.is_empty()).map(|(key, _)| *key).collect();
+        let mut keys = interface_strings();
+        keys.extend(LANGUAGE_TABLES.iter().flat_map(|(_, table)| table.iter().map(|(key, _)| *key)));
+        keys.extend(TABLE.iter().map(|(key, _)| *key));
+        let mut missing: Vec<_> = keys.difference(&korean).copied().collect();
+        missing.sort_unstable();
+        assert!(missing.is_empty(), "Korean translations missing: {missing:?}");
+        assert_eq!(tr_context("ko", "Columns", "table"), "열");
+        assert_eq!(tr_context("ko", "Arrange", "Object"), "쌓임 순서");
+        assert_eq!(tr_context("ko", "Arrange", "Window"), "창 배열");
+    }
+
     /// The strings each interface language shows in English, for the `cargo xtask ci` log. It
     /// always passes: `cargo xtask i18n-report` runs it.
     #[test]
@@ -5027,6 +5056,7 @@ mod tests {
     /// the list of UI-only labels know them.
     fn interface_strings() -> HashSet<&'static str> {
         let mut keys = HashSet::new();
+        keys.extend(["Tool help", "Choose a tool below to read how to use it. F1 opens this help."]);
         // Command labels and menu names reach `tr` from the engine and the UI command table.
         for spec in designcraft_engine::command_specs() {
             keys.insert(spec.label);
@@ -5034,7 +5064,13 @@ mod tests {
         }
         keys.extend(crate::menus::UI_COMMANDS.iter().map(|(_, label, _, _)| *label));
         // Tool names reach `tr` from the Tools panel.
-        keys.extend(designcraft_tools::TOOL_GROUPS.iter().flat_map(|group| group.iter()).map(|tool| tool.label));
+        keys.extend(
+            designcraft_tools::TOOL_GROUPS
+                .iter()
+                .flat_map(|group| group.iter())
+                .flat_map(|tool| [tool.label, tool.description])
+                .filter(|text| !text.is_empty()),
+        );
         // So do the About window's tab names, app descriptions and the credits' column and sort labels.
         keys.extend(crate::about::ABOUT_TABS);
         keys.extend(crate::about::SIBLINGS.iter().map(|(_, _, what)| *what));

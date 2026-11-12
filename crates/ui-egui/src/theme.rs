@@ -465,10 +465,11 @@ pub(crate) fn font_definitions(craft: &'static [designcraft_fonts::CraftFont], l
     // BIZ UDPGothic (the UI face) first, Regular before Bold; the semibold family prefers Bold.
     japanese.sort_by_key(|f| (f.family != "BIZ UDPGothic", f.style != "Regular"));
     let chinese = pick("Hans");
+    let korean = pick("Kore");
     let arabic = pick("Arab");
     let georgian = pick("Geor");
     let name = |f: &designcraft_fonts::CraftFont| format!("craft-{}-{}", f.family, f.style);
-    for f in japanese.iter().chain(&chinese) {
+    for f in japanese.iter().chain(&chinese).chain(&korean) {
         // CJK faces sit on the Latin baseline (see `baseline_tweak`).
         fonts.font_data.insert(name(f), Arc::new(FontData { tweak: baseline_tweak(f.bytes, 0), ..FontData::from_static(f.bytes) }));
     }
@@ -484,7 +485,14 @@ pub(crate) fn font_definitions(craft: &'static [designcraft_fonts::CraftFont], l
             ja.sort_by_key(|f| (f.family != "BIZ UDPGothic", f.style != "Bold"));
         }
         let (first, second) = if zh { (&chinese, &ja) } else { (&ja, &chinese) };
-        stack.extend(first.iter().chain(second).chain(&arabic).chain(&georgian).map(|f| name(f)));
+        if lang == "ko" {
+            stack.extend(korean.iter().map(|f| name(f)));
+        }
+        stack.extend(first.iter().chain(second).map(|f| name(f)));
+        if lang != "ko" {
+            stack.extend(korean.iter().map(|f| name(f)));
+        }
+        stack.extend(arabic.iter().chain(&georgian).map(|f| name(f)));
     }
     // Arabic runs (rtl.rs): the Arabic face first, so letters and spaces shape as one run.
     for family in ["arabic", "arabic-semibold"] {
@@ -493,7 +501,7 @@ pub(crate) fn font_definitions(craft: &'static [designcraft_fonts::CraftFont], l
             .iter()
             .map(|f| name(f))
             .chain([ui.to_string(), "ui".to_string()])
-            .chain(japanese.iter().chain(&chinese).chain(&georgian).map(|f| name(f)));
+            .chain(japanese.iter().chain(&chinese).chain(&korean).chain(&georgian).map(|f| name(f)));
         let mut seen = std::collections::HashSet::new();
         fonts.families.insert(FontFamily::Name(family.into()), stack.filter(|n| seen.insert(n.clone())).collect());
     }

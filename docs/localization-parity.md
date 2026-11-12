@@ -6,12 +6,30 @@ Per-language status of the DesignCraft interface and of document typesetting in 
 Script-specific typesetting detail: [cjk.md](cjk.md), [cjk-typography.md](cjk-typography.md),
 [arabic-typography.md](arabic-typography.md). Overall numbers: [target-app-parity.md](target-app-parity.md).
 
+## Korean fork update — 2026-10-24
+
+The Korean catalog now covers **over 2,400 source keys** (all existing language tables,
+shared-table keys and the enumerated UI inventory), plus original beginner descriptions and
+dialog variants. Common wording is reused from the MIT/Apache-2.0 Craft catalogs and reviewed
+against `craft-i18n/docs/terminology/ko-*.tsv`; layout-specific text is newly translated.
+`korean_covers_the_catalogs_commands_and_beginner_help` checks this coverage as the inventory grows.
+This is source coverage, not a claim that unenumerated runtime errors or every document feature
+is localized. The older per-language measurements below remain dated snapshots.
+
+Every one of the 37 tools has original usage guidance. The four placeholder tools explicitly
+say they are not implemented. The same descriptions appear in hover tooltips, `tool.list`,
+`ui.tool.list`, and **Help › Tool help** (`F1`, `help.tools {open?: bool}`). The help window is
+usable without hovering. Korean distinguishes page **단** from table/guide **열**, object
+**쌓임 순서** from **창 배열**, and follows the glossary's **획**, **상위 페이지** and
+**페이스트보드**. The optional craft-fonts Korean face supplies Hangul in every UI font family.
+Native-speaker review remains outstanding; source coverage does not establish typography parity.
+
 **Dimension score: ~45% ready (estimated), 120–180 h** plus native-speaker review (human).
 
 ## How it was measured
 
 Interface strings live in `crates/ui-egui/src/i18n.rs` (a shared table with German, French,
-Spanish, Japanese and Simplified Chinese columns) and `crates/ui-egui/src/i18n/{ar,cs,it,ja,ka,pt_br,uk}.rs`.
+Spanish, Japanese and Simplified Chinese columns) and `crates/ui-egui/src/i18n/{ar,cs,it,ja,ka,ko,pt_br,uk}.rs`.
 Untranslated strings fall back to English. A script (2026-10-10) built the set of English
 interface strings as the union of every catalog's keys, every engine command label and every
 literal passed to `tr`/`t` in the UI crate: **1,724 strings**. A further ~145 capitalized literals
@@ -41,7 +59,7 @@ come as Middle East editions with an English or French interface and right-to-le
 | Indonesian | id | ✗ | 0 (0%) | none | Latin ✓ | no | none | 12–18 |
 | Japanese | ja | ✓ | 1,644 (95%) | whole interface (#272), vertical-type commands; no help | vertical text, kinsoku, aki, ruby, warichu ✓ (partial depth, cjk.md); canvas IME ✓, not checked by hand (#322); Japanese UI and Mincho fonts from craft-fonts | no | partial | 6–10 (+ IME checks, shared with zh) |
 | German | de | ✓ | 1,438 (83%) | menus, panels, most dialogs; no help | Latin ✓; no German hyphenation (InDesign ships 2006 reform patterns) | no | partial | 6–10 |
-| Korean | ko | ✓ | 0 (0%) | none | Korean line breaking at spaces ✓; canvas IME ✓, not checked by hand (#322) | no | none | 15–25 |
+| Korean | ko | ✓ | current fork: 2,425-key source inventory covered (2026-10-24) | menus, panels, cataloged dialogs, tooltips and beginner tool help | optional OFL Korean UI face; Korean typography/IME depth remains separate | no | catalog complete for the inventory; native review pending | review and typography work remain |
 | Vietnamese | vi | ✗ | 0 (0%) | none | Latin with stacked diacritics via harfrust, untested | no | none | 12–18 |
 
 Percentages are of the 1,724 measured strings. A language is `full` only when every user-visible
@@ -89,6 +107,7 @@ locale shaping. See [typography-parity.md](typography-parity.md).
 
 | Date | Change | Summary |
 |---|---|---|
+| 2026-10-24 | minor | Expanded the Korean catalog to the current 2,425-key source inventory; 38 original tool descriptions, F1 help window, context-specific terminology and shared OFL Korean font input; separate human/native review remains pending |
 | 2026-10-11 | minor | Localized Japanese print, import and table controls; checked Japanese and English renders |
 | 2026-10-14 | minor | Georgian (`ka`) interface added |
 | 2026-10-10 | major | Created: catalogs measured (1,724 strings), the twelve key languages plus Italian and Ukrainian |
